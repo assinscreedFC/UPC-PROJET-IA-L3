@@ -1,0 +1,6 @@
+pygame
+pandas
+matplotlib
+seaborn
+pytest
+pytest-cov
