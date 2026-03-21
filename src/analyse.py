@@ -68,5 +68,5 @@ def analyze_results(csv_path):
 if __name__ == "__main__":
     # Nom du fichier généré par votre tournoi (vérifiez le nom dans tournament.py)
     # Exemple : IA niveau 1 contre IA niveau 2
-    CSV_FILE = "../data/results/tournoi_d1_vs_d2.csv"
+    CSV_FILE = "../data/results/tournoi_d2_vs_d2.csv"
     analyze_results(CSV_FILE)

@@ -1,67 +1,104 @@
 from src.engine.board import QuoridorBoard
 from collections import deque
+import random
 
 
 def evaluate_board(board: QuoridorBoard, player_id: int, strategy: str) -> float:
     """
-    Fonction chapeau qui dirige vers la bonne heuristique.
+    Sélecteur d'heuristique.
     """
     if strategy == "simple":
         return heuristic_simple_distance(board, player_id)
     elif strategy == "advanced":
         return heuristic_shortest_path(board, player_id)
+    elif strategy == "expert":
+        return heuristic_expert(board, player_id)
     else:
-        # Par défaut
-        return heuristic_simple_distance(board, player_id)
+        return heuristic_shortest_path(board, player_id)
 
 
 def heuristic_simple_distance(board: QuoridorBoard, player_id: int) -> float:
     """
-    Niveau 1 : Différence de distance "à vol d'oiseau" (Manhattan) vers la ligne d'arrivée.
-    Rapide mais peu précise car elle ignore les murs.
+    Niveau 1 : Ratio de base.
+    L'IA commence à comprendre que bloquer vaut plus que bouger.
     """
     opp_id = 2 if player_id == 1 else 1
+    len_p = bfs_shortest_path_len(board, player_id)
+    len_o = bfs_shortest_path_len(board, opp_id)
 
-    p_x, p_y = board.positions[player_id]
-    o_x, o_y = board.positions[opp_id]
+    # On donne 2x plus d'importance au chemin de l'adversaire.
+    # Si je fais un pas : +10 pts. Si je le bloque d'une case : +20 pts.
+    score = (len_o * 20) - (len_p * 10)
 
-    # Cibles : ligne 8 pour J1, ligne 0 pour J2
-    target_p = 8 if player_id == 1 else 0
-    target_o = 8 if opp_id == 1 else 0
-
-    dist_p = abs(target_p - p_y)
-    dist_o = abs(target_o - o_y)
-
-    # Plus ma distance est petite, mieux c'est. Plus celle de l'adversaire est grande, mieux c'est.
-    return (dist_o - dist_p) * 10
+    return score + random.uniform(-0.1, 0.1)
 
 
 def heuristic_shortest_path(board: QuoridorBoard, player_id: int) -> float:
     """
-    Niveau 2/3 : Utilise le BFS pour connaître la distance RÉELLE en contournant les murs.
-    Beaucoup plus fort stratégiquement.
+    Niveau 2 : Agressivité intermédiaire.
+    Priorité au différentiel de chemin sans aucune pénalité de mur.
     """
     opp_id = 2 if player_id == 1 else 1
-
     len_p = bfs_shortest_path_len(board, player_id)
     len_o = bfs_shortest_path_len(board, opp_id)
 
-    # Bonus pour les murs restants (stratégique)
-    walls_score = (board.walls_count[player_id] - board.walls_count[opp_id]) * 5
+    if len_p == 0: return 100000
+    if len_o == 0: return -100000
 
-    # Score basé sur la différence de chemin réel + murs
-    return (len_o - len_p) * 10 + walls_score
+    # Ratio 3:1 -> Bloquer est 3 fois plus gratifiant que d'avancer.
+    score = (len_o * 30) - (len_p * 10)
+
+    # Bonus de centralité pour ne pas rester coincé sur les bords
+    pos_x = board.positions[player_id][0]
+    score += (4 - abs(4 - pos_x)) * 5
+
+    return score + random.uniform(-0.2, 0.2)
+
+
+def heuristic_expert(board: QuoridorBoard, player_id: int) -> float:
+    """
+    Niveau 3 : Maître du blocage et du Tempo.
+    Priorité absolue au sabotage du chemin adverse.
+    """
+    opp_id = 2 if player_id == 1 else 1
+    len_p = bfs_shortest_path_len(board, player_id)
+    len_o = bfs_shortest_path_len(board, opp_id)
+
+    if len_p == 0: return 1000000
+    if len_o == 0: return -1000000
+
+    # 1. Le Différentiel Massif
+    # Ratio 4:1 -> L'IA est obsédée par l'allongement du chemin adverse.
+    score = (len_o * 40) - (len_p * 10)
+
+    # 2. Bonus de Menace (Sabotage préventif)
+    # Si l'adversaire est à moins de 7 cases, chaque case qu'il gagne nous coûte très cher.
+    # Cela force l'IA à poser des murs AVANT qu'il ne soit trop tard.
+    if len_o <= 7:
+        score += (10 - len_o) * 100
+
+    # 3. Centralité stratégique
+    pos_x = board.positions[player_id][0]
+    score += (4 - abs(4 - pos_x)) * 10
+
+    # 4. Anti-stagnation
+    # On ajoute une petite récompense liée à la coordonnée Y pour s'assurer
+    # que si aucun mur n'est utile, l'IA avance au lieu de faire du surplace.
+    p_y = board.positions[player_id][1]
+    progress_y = p_y if player_id == 1 else (8 - p_y)
+    score += progress_y * 2
+
+    return score + random.uniform(-0.05, 0.05)
 
 
 def bfs_shortest_path_len(board: QuoridorBoard, pid: int) -> int:
     """
-    Calcule la longueur du chemin le plus court vers la victoire.
-    Retourne une grande valeur (100) si bloqué (théoriquement impossible avec nos règles).
+    Calcule la distance réelle (BFS) vers la victoire.
     """
     start = board.positions[pid]
     target_y = 8 if pid == 1 else 0
 
-    queue = deque([(start, 0)])  # (pos, distance)
+    queue = deque([(start, 0)])
     visited = {start}
 
     while queue:
@@ -74,4 +111,4 @@ def bfs_shortest_path_len(board: QuoridorBoard, pid: int) -> int:
                 visited.add((nx, ny))
                 queue.append(((nx, ny), dist + 1))
 
-    return 100  # Valeur de pénalité si aucun chemin trouvé
+    return 50  # Indique un blocage majeur
