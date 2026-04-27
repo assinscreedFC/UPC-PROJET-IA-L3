@@ -21,6 +21,7 @@ class QuoridorIA:
         self.player_id = player_id
         self.depth = depth
         self.strategy = strategy
+        self.position_history: list = []  # Historique des positions pour éviter l'oscillation
 
     def alpha_beta(self, board: QuoridorBoard, depth: int, alpha: float,
                    beta: float, maximizing_player: bool) -> float:
@@ -90,11 +91,14 @@ class QuoridorIA:
         alpha = -math.inf
         beta = math.inf
 
+        # Positions récentes (les 6 dernières) pour détecter l'oscillation
+        recent = set(self.position_history[-6:])
+
         # On itère sur les coups de premier niveau pour trouver lequel donne le meilleur score
-        for type, data in moves:
+        for move_type, data in moves:
             # Simulation du coup
             new_board = board.copy()
-            if type == "MOVE":
+            if move_type == "MOVE":
                 new_board.move_pawn(self.player_id, data)
             else:
                 new_board.place_wall(self.player_id, *data)
@@ -102,11 +106,22 @@ class QuoridorIA:
             # Appel récursif (c'est maintenant au tour de MIN de jouer, d'où False)
             value = self.alpha_beta(new_board, self.depth - 1, alpha, beta, False)
 
+            # Pénaliser les positions déjà visitées récemment pour casser l'oscillation
+            if move_type == "MOVE" and data in recent:
+                value -= 3
+
             if value > best_value:
                 best_value = value
-                best_move = (type, data)
+                best_move = (move_type, data)
 
             # Mise à jour de l'alpha pour l'élagage
             alpha = max(alpha, value)
+
+        # Enregistrer la position choisie dans l'historique
+        if best_move and best_move[0] == "MOVE":
+            self.position_history.append(best_move[1])
+            # Garder seulement les 10 dernières positions
+            if len(self.position_history) > 10:
+                self.position_history = self.position_history[-10:]
 
         return best_move

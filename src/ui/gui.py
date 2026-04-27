@@ -74,18 +74,25 @@ class QuoridorGUI:
         # Variables de jeu
         self.board = None
         self.ia = None
+        self.ia1 = None  # IA joueur 1 (mode IA vs IA)
+        self.ia2 = None  # IA joueur 2 (mode IA vs IA)
         self.vs_ia = True
+        self.ia_vs_ia = False  # Mode spectateur IA vs IA
         self.turn = 1  # 1 ou 2
         self.wall_orientation = 'H'
         self.hover_pos = None
         self.message = ""
+        self.ia_delay = 500  # Délai entre les coups IA (ms)
+        self.last_ia_move_time = 0
 
         # Création des boutons du menu
         cx = SCREEN_WIDTH // 2 - 100
-        self.btn_pvp = Button(cx, 200, 200, 50, "Joueur vs Joueur", self.font_ui)
-        self.btn_pve_easy = Button(cx, 270, 200, 50, "IA Facile (Niv 1)", self.font_ui)
-        self.btn_pve_med = Button(cx, 340, 200, 50, "IA Moyenne (Niv 2)", self.font_ui)
-        self.btn_pve_hard = Button(cx, 410, 200, 50, "IA Experte (Niv 3)", self.font_ui)
+        self.btn_pvp = Button(cx, 180, 200, 50, "Joueur vs Joueur", self.font_ui)
+        self.btn_pve_easy = Button(cx, 240, 200, 50, "IA Facile (Niv 1)", self.font_ui)
+        self.btn_pve_med = Button(cx, 300, 200, 50, "IA Moyenne (Niv 2)", self.font_ui)
+        self.btn_pve_hard = Button(cx, 360, 200, 50, "IA Experte (Niv 3)", self.font_ui)
+        self.btn_ava_easy = Button(cx, 440, 200, 50, "IA vs IA (1 vs 2)", self.font_ui)
+        self.btn_ava_med = Button(cx, 500, 200, 50, "IA vs IA (2 vs 3)", self.font_ui)
 
         # Bouton fin de jeu
         self.btn_restart = Button(cx, 400, 200, 60, "Retour au Menu", self.font_ui)
@@ -104,18 +111,32 @@ class QuoridorGUI:
         else:
             print("Aucun fichier 'assets/music.mp3' trouvé. Le jeu sera silencieux.")
 
-    def start_game(self, vs_ia, difficulty=1):
+    def start_game(self, vs_ia, difficulty=1, ia_vs_ia=False, depth1=1, depth2=2):
         """Initialise une nouvelle partie."""
         self.board = QuoridorBoard()
         self.vs_ia = vs_ia
+        self.ia_vs_ia = ia_vs_ia
         self.turn = 1
-        self.message = "À vous de jouer !"
+        self.last_ia_move_time = pygame.time.get_ticks()
 
-        if self.vs_ia:
+        if self.ia_vs_ia:
+            strat1 = "advanced"
+            strat2 = "advanced"
+            self.ia1 = QuoridorIA(1, depth=depth1, strategy=strat1)
+            self.ia2 = QuoridorIA(2, depth=depth2, strategy=strat2)
+            self.ia = None
+            self.message = f"IA Niv{depth1} vs IA Niv{depth2}"
+        elif self.vs_ia:
             strategy = "simple" if difficulty == 1 else "advanced"
             self.ia = QuoridorIA(2, depth=difficulty, strategy=strategy)
+            self.ia1 = None
+            self.ia2 = None
+            self.message = "À vous de jouer !"
         else:
             self.ia = None
+            self.ia1 = None
+            self.ia2 = None
+            self.message = "À vous de jouer !"
 
         self.state = 'GAME'
 
@@ -125,10 +146,15 @@ class QuoridorGUI:
             mouse_pos = pygame.mouse.get_pos()
 
             # Gestion des événements globale
+            prev_state = self.state
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
+                # Si l'état a changé pendant cette frame, ignorer les événements restants
+                if self.state != prev_state:
+                    continue
 
                 if self.state == 'MENU':
                     self.handle_menu_events(event, mouse_pos)
@@ -136,7 +162,7 @@ class QuoridorGUI:
                     self.handle_game_events(event)
                 elif self.state == 'VICTORY':
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        if self.btn_restart.is_clicked(mouse_pos):
+                        if self.btn_restart.is_clicked(event.pos):
                             self.state = 'MENU'
 
             # Gestion de l'affichage selon l'état
@@ -154,14 +180,19 @@ class QuoridorGUI:
     # --- LOGIQUE MENU ---
     def handle_menu_events(self, event, mouse_pos):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.btn_pvp.is_clicked(mouse_pos):
+            click_pos = event.pos  # Position exacte du clic
+            if self.btn_pvp.is_clicked(click_pos):
                 self.start_game(vs_ia=False)
-            elif self.btn_pve_easy.is_clicked(mouse_pos):
+            elif self.btn_pve_easy.is_clicked(click_pos):
                 self.start_game(vs_ia=True, difficulty=1)
-            elif self.btn_pve_med.is_clicked(mouse_pos):
+            elif self.btn_pve_med.is_clicked(click_pos):
                 self.start_game(vs_ia=True, difficulty=2)
-            elif self.btn_pve_hard.is_clicked(mouse_pos):
+            elif self.btn_pve_hard.is_clicked(click_pos):
                 self.start_game(vs_ia=True, difficulty=3)
+            elif self.btn_ava_easy.is_clicked(click_pos):
+                self.start_game(vs_ia=False, ia_vs_ia=True, depth1=1, depth2=2)
+            elif self.btn_ava_med.is_clicked(click_pos):
+                self.start_game(vs_ia=False, ia_vs_ia=True, depth1=2, depth2=3)
 
     def draw_menu(self, mouse_pos):
         self.screen.fill(COLOR_BG)
@@ -175,7 +206,8 @@ class QuoridorGUI:
         self.screen.blit(subtitle, sub_rect)
 
         # Boutons
-        for btn in [self.btn_pvp, self.btn_pve_easy, self.btn_pve_med, self.btn_pve_hard]:
+        for btn in [self.btn_pvp, self.btn_pve_easy, self.btn_pve_med, self.btn_pve_hard,
+                    self.btn_ava_easy, self.btn_ava_med]:
             btn.check_hover(mouse_pos)
             btn.draw(self.screen)
 
@@ -196,11 +228,17 @@ class QuoridorGUI:
 
         # Interaction Joueur Humain (Seulement si c'est son tour)
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.ia_vs_ia:
+                return  # Mode spectateur, pas d'input
             if self.vs_ia and self.turn == 2:
                 return  # Bloque l'input si c'est à l'IA
 
-            if self.hover_pos:
-                gx, gy = self.hover_pos
+            # Calculer la position grille directement depuis le clic
+            mx, my = event.pos
+            gx = (mx - OFFSET_X) // CELL_SIZE
+            gy = (my - OFFSET_Y) // CELL_SIZE
+
+            if 0 <= gx < 9 and 0 <= gy < 9:
                 success = False
 
                 # Clic Gauche : Déplacement
@@ -219,17 +257,41 @@ class QuoridorGUI:
                     self.check_win_or_switch_turn()
 
     def update_game_logic(self):
-        # Tour de l'IA
-        if self.vs_ia and self.turn == 2 and self.board.winner is None:
-            self.message = "L'IA réfléchit..."
-            self.draw_game(pygame.mouse.get_pos())  # Force l'affichage du message
+        if self.board.winner is not None:
+            return
+
+        # Mode IA vs IA : les deux joueurs sont des IA
+        if self.ia_vs_ia:
+            now = pygame.time.get_ticks()
+            if now - self.last_ia_move_time < self.ia_delay:
+                return  # Attendre le délai pour que le spectateur puisse suivre
+
+            current_ia = self.ia1 if self.turn == 1 else self.ia2
+            self.message = f"IA Joueur {self.turn} réfléchit..."
+            self.draw_game(pygame.mouse.get_pos())
             pygame.display.flip()
 
-            # Calcul du coup
+            move = current_ia.get_best_move(self.board)
+            if move:
+                move_type, data = move
+                if move_type == "MOVE":
+                    self.board.move_pawn(self.turn, data)
+                else:
+                    self.board.place_wall(self.turn, *data)
+                self.last_ia_move_time = pygame.time.get_ticks()
+                self.check_win_or_switch_turn()
+            return
+
+        # Mode Joueur vs IA : tour de l'IA (joueur 2)
+        if self.vs_ia and self.turn == 2:
+            self.message = "L'IA réfléchit..."
+            self.draw_game(pygame.mouse.get_pos())
+            pygame.display.flip()
+
             move = self.ia.get_best_move(self.board)
             if move:
-                type, data = move
-                if type == "MOVE":
+                move_type, data = move
+                if move_type == "MOVE":
                     self.board.move_pawn(2, data)
                 else:
                     self.board.place_wall(2, *data)
