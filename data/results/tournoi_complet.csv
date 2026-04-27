@@ -1,0 +1,45 @@
+phase,match,ia1,ia1_depth,ia1_strategy,ia2,ia2_depth,ia2_strategy,winner,moves,time,p1_walls_used,p2_walls_used
+Poule A - J1,1,Naive,1,simple,Stratege,2,advanced,Stratege,86,1.4663,10,10
+Poule A - J1,2,Naive,1,simple,Agressive,1,expert,Naive,61,0.47,9,10
+Poule A - J1,3,Naive,1,simple,Visionnaire,3,advanced,Visionnaire,88,7.1852,10,10
+Poule A - J1,4,Stratege,2,advanced,Agressive,1,expert,Agressive,82,2.1216,10,10
+Poule A - J1,5,Stratege,2,advanced,Visionnaire,3,advanced,Stratege,77,5.7604,9,10
+Poule A - J1,6,Agressive,1,expert,Visionnaire,3,advanced,Visionnaire,82,6.0941,10,10
+Poule A - J2,7,Stratege,2,advanced,Naive,1,simple,Naive,72,2.5073,10,10
+Poule A - J2,8,Agressive,1,expert,Naive,1,simple,Agressive,69,0.4173,10,10
+Poule A - J2,9,Visionnaire,3,advanced,Naive,1,simple,Naive,88,12.2465,10,10
+Poule A - J2,10,Agressive,1,expert,Stratege,2,advanced,Stratege,74,1.3271,10,10
+Poule A - J2,11,Visionnaire,3,advanced,Stratege,2,advanced,Stratege,76,8.9353,10,8
+Poule A - J2,12,Visionnaire,3,advanced,Agressive,1,expert,Visionnaire,51,8.2929,10,1
+Poule A - J3,13,Naive,1,simple,Stratege,2,advanced,Stratege,64,1.4484,10,10
+Poule A - J3,14,Naive,1,simple,Agressive,1,expert,Naive,67,0.591,10,8
+Poule A - J3,15,Naive,1,simple,Visionnaire,3,advanced,Visionnaire,94,7.5338,10,10
+Poule A - J3,16,Stratege,2,advanced,Agressive,1,expert,Stratege,31,1.772,6,2
+Poule A - J3,17,Stratege,2,advanced,Visionnaire,3,advanced,Stratege,91,8.8502,10,10
+Poule A - J3,18,Agressive,1,expert,Visionnaire,3,advanced,Agressive,87,5.056,10,10
+Poule B - J1,1,Prudente,1,advanced,Calculatrice,2,simple,Calculatrice,72,1.4989,10,10
+Poule B - J1,2,Prudente,1,advanced,Commandante,2,expert,Prudente,83,1.6837,10,10
+Poule B - J1,3,Prudente,1,advanced,Maitresse,3,expert,Prudente,79,7.2224,10,10
+Poule B - J1,4,Calculatrice,2,simple,Commandante,2,expert,Calculatrice,41,3.1179,9,3
+Poule B - J1,5,Calculatrice,2,simple,Maitresse,3,expert,Calculatrice,91,11.0377,10,10
+Poule B - J1,6,Commandante,2,expert,Maitresse,3,expert,Commandante,31,6.9853,2,3
+Poule B - J2,7,Calculatrice,2,simple,Prudente,1,advanced,Calculatrice,73,2.2423,10,10
+Poule B - J2,8,Commandante,2,expert,Prudente,1,advanced,Commandante,65,1.367,10,10
+Poule B - J2,9,Maitresse,3,expert,Prudente,1,advanced,Prudente,86,7.6535,10,10
+Poule B - J2,10,Commandante,2,expert,Calculatrice,2,simple,Calculatrice,70,3.2674,10,10
+Poule B - J2,11,Maitresse,3,expert,Calculatrice,2,simple,Calculatrice,66,10.185,10,9
+Poule B - J2,12,Maitresse,3,expert,Commandante,2,expert,Commandante,56,7.8797,10,2
+Poule B - J3,13,Prudente,1,advanced,Calculatrice,2,simple,Calculatrice,68,1.3487,10,10
+Poule B - J3,14,Prudente,1,advanced,Commandante,2,expert,Prudente,59,1.5222,9,7
+Poule B - J3,15,Prudente,1,advanced,Maitresse,3,expert,Maitresse,76,5.1301,10,10
+Poule B - J3,16,Calculatrice,2,simple,Commandante,2,expert,Commandante,66,2.8851,10,10
+Poule B - J3,17,Calculatrice,2,simple,Maitresse,3,expert,Calculatrice,55,9.2491,10,3
+Poule B - J3,18,Commandante,2,expert,Maitresse,3,expert,Commandante,33,7.7288,3,3
+Quart de finale,1,Stratege,2,advanced,Maitresse,3,expert,Maitresse,80,6.8862,10,10
+Quart de finale,2,Calculatrice,2,simple,Agressive,1,expert,Agressive,70,2.1998,10,10
+Quart de finale,3,Naive,1,simple,Prudente,1,advanced,Prudente,62,0.4941,10,9
+Quart de finale,4,Commandante,2,expert,Visionnaire,3,advanced,Nul,200,7.8341,2,10
+Demi-finale,5,Maitresse,3,expert,Prudente,1,advanced,Prudente,106,8.7911,10,10
+Demi-finale,6,Agressive,1,expert,Commandante,2,expert,Commandante,80,1.3615,9,10
+Petite finale,7,Maitresse,3,expert,Agressive,1,expert,Agressive,82,6.856,10,10
+Finale,8,Prudente,1,advanced,Commandante,2,expert,Commandante,74,1.3115,10,10

@@ -1,0 +1,9 @@
+rang,nom,depth,strategy
+1,Commandante,2,expert
+2,Prudente,1,advanced
+3,Agressive,1,expert
+4,Maitresse,3,expert
+5,Stratege,2,advanced
+6,Naive,1,simple
+7,Visionnaire,3,advanced
+8,Calculatrice,2,simple

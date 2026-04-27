@@ -3,6 +3,7 @@ import sys
 import os
 from src.engine.board import QuoridorBoard
 from src.ia.minimax import QuoridorIA
+from src.tournois import PARTICIPANTS
 
 # --- CONSTANTES GRAPHIQUES ---
 SCREEN_WIDTH = 900  # Un peu plus large pour l'interface
@@ -76,6 +77,8 @@ class QuoridorGUI:
         self.ia = None
         self.ia1 = None  # IA joueur 1 (mode IA vs IA)
         self.ia2 = None  # IA joueur 2 (mode IA vs IA)
+        self.ia1_name = ""
+        self.ia2_name = ""
         self.vs_ia = True
         self.ia_vs_ia = False  # Mode spectateur IA vs IA
         self.turn = 1  # 1 ou 2
@@ -84,15 +87,33 @@ class QuoridorGUI:
         self.message = ""
         self.ia_delay = 500  # Délai entre les coups IA (ms)
         self.last_ia_move_time = 0
+        self.move_count = 0
+
+        # Selection IA vs IA
+        self.pick_ia1 = None  # Nom de l'IA 1 selectionnee
+        self.pick_ia2 = None  # Nom de l'IA 2 selectionnee
+        self.ia_names = list(PARTICIPANTS.keys())
 
         # Création des boutons du menu
         cx = SCREEN_WIDTH // 2 - 100
-        self.btn_pvp = Button(cx, 180, 200, 50, "Joueur vs Joueur", self.font_ui)
-        self.btn_pve_easy = Button(cx, 240, 200, 50, "IA Facile (Niv 1)", self.font_ui)
-        self.btn_pve_med = Button(cx, 300, 200, 50, "IA Moyenne (Niv 2)", self.font_ui)
-        self.btn_pve_hard = Button(cx, 360, 200, 50, "IA Experte (Niv 3)", self.font_ui)
-        self.btn_ava_easy = Button(cx, 440, 200, 50, "IA vs IA (1 vs 2)", self.font_ui)
-        self.btn_ava_med = Button(cx, 500, 200, 50, "IA vs IA (2 vs 3)", self.font_ui)
+        self.btn_pvp = Button(cx, 200, 200, 50, "Joueur vs Joueur", self.font_ui)
+        self.btn_pve_easy = Button(cx, 260, 200, 50, "IA Facile (Niv 1)", self.font_ui)
+        self.btn_pve_med = Button(cx, 320, 200, 50, "IA Moyenne (Niv 2)", self.font_ui)
+        self.btn_pve_hard = Button(cx, 380, 200, 50, "IA Experte (Niv 3)", self.font_ui)
+        self.btn_watch = Button(cx, 460, 200, 50, "Regarder IA vs IA", self.font_ui)
+
+        # Boutons de selection IA (ecran PICK_IA)
+        self.btn_ia_list = []
+        for i, name in enumerate(self.ia_names):
+            cfg = PARTICIPANTS[name]
+            label = f"{name} (D{cfg['depth']},{cfg['strategy'][:3]})"
+            col = i % 2
+            row = i // 2
+            bx = 100 + col * 350
+            by = 180 + row * 60
+            self.btn_ia_list.append(Button(bx, by, 300, 45, label, self.font_small))
+
+        self.btn_pick_back = Button(cx, 520, 200, 40, "Retour", self.font_small)
 
         # Bouton fin de jeu
         self.btn_restart = Button(cx, 400, 200, 60, "Retour au Menu", self.font_ui)
@@ -111,32 +132,36 @@ class QuoridorGUI:
         else:
             print("Aucun fichier 'assets/music.mp3' trouvé. Le jeu sera silencieux.")
 
-    def start_game(self, vs_ia, difficulty=1, ia_vs_ia=False, depth1=1, depth2=2):
+    def start_game(self, vs_ia, difficulty=1, ia_vs_ia=False,
+                   ia1_name=None, ia2_name=None):
         """Initialise une nouvelle partie."""
         self.board = QuoridorBoard()
         self.vs_ia = vs_ia
         self.ia_vs_ia = ia_vs_ia
         self.turn = 1
+        self.move_count = 0
         self.last_ia_move_time = pygame.time.get_ticks()
 
-        if self.ia_vs_ia:
-            strat1 = "advanced"
-            strat2 = "advanced"
-            self.ia1 = QuoridorIA(1, depth=depth1, strategy=strat1)
-            self.ia2 = QuoridorIA(2, depth=depth2, strategy=strat2)
+        if self.ia_vs_ia and ia1_name and ia2_name:
+            cfg1 = PARTICIPANTS[ia1_name]
+            cfg2 = PARTICIPANTS[ia2_name]
+            self.ia1 = QuoridorIA(1, depth=cfg1["depth"], strategy=cfg1["strategy"])
+            self.ia2 = QuoridorIA(2, depth=cfg2["depth"], strategy=cfg2["strategy"])
+            self.ia1_name = ia1_name
+            self.ia2_name = ia2_name
             self.ia = None
-            self.message = f"IA Niv{depth1} vs IA Niv{depth2}"
+            self.message = f"{ia1_name} vs {ia2_name}"
         elif self.vs_ia:
             strategy = "simple" if difficulty == 1 else "advanced"
             self.ia = QuoridorIA(2, depth=difficulty, strategy=strategy)
             self.ia1 = None
             self.ia2 = None
-            self.message = "À vous de jouer !"
+            self.message = "A vous de jouer !"
         else:
             self.ia = None
             self.ia1 = None
             self.ia2 = None
-            self.message = "À vous de jouer !"
+            self.message = "A vous de jouer !"
 
         self.state = 'GAME'
 
@@ -158,6 +183,8 @@ class QuoridorGUI:
 
                 if self.state == 'MENU':
                     self.handle_menu_events(event, mouse_pos)
+                elif self.state == 'PICK_IA':
+                    self.handle_pick_ia_events(event)
                 elif self.state == 'GAME':
                     self.handle_game_events(event)
                 elif self.state == 'VICTORY':
@@ -168,6 +195,8 @@ class QuoridorGUI:
             # Gestion de l'affichage selon l'état
             if self.state == 'MENU':
                 self.draw_menu(mouse_pos)
+            elif self.state == 'PICK_IA':
+                self.draw_pick_ia(mouse_pos)
             elif self.state == 'GAME':
                 self.update_game_logic()
                 self.draw_game(mouse_pos)
@@ -180,7 +209,7 @@ class QuoridorGUI:
     # --- LOGIQUE MENU ---
     def handle_menu_events(self, event, mouse_pos):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            click_pos = event.pos  # Position exacte du clic
+            click_pos = event.pos
             if self.btn_pvp.is_clicked(click_pos):
                 self.start_game(vs_ia=False)
             elif self.btn_pve_easy.is_clicked(click_pos):
@@ -189,10 +218,10 @@ class QuoridorGUI:
                 self.start_game(vs_ia=True, difficulty=2)
             elif self.btn_pve_hard.is_clicked(click_pos):
                 self.start_game(vs_ia=True, difficulty=3)
-            elif self.btn_ava_easy.is_clicked(click_pos):
-                self.start_game(vs_ia=False, ia_vs_ia=True, depth1=1, depth2=2)
-            elif self.btn_ava_med.is_clicked(click_pos):
-                self.start_game(vs_ia=False, ia_vs_ia=True, depth1=2, depth2=3)
+            elif self.btn_watch.is_clicked(click_pos):
+                self.pick_ia1 = None
+                self.pick_ia2 = None
+                self.state = 'PICK_IA'
 
     def draw_menu(self, mouse_pos):
         self.screen.fill(COLOR_BG)
@@ -207,9 +236,66 @@ class QuoridorGUI:
 
         # Boutons
         for btn in [self.btn_pvp, self.btn_pve_easy, self.btn_pve_med, self.btn_pve_hard,
-                    self.btn_ava_easy, self.btn_ava_med]:
+                    self.btn_watch]:
             btn.check_hover(mouse_pos)
             btn.draw(self.screen)
+
+    # --- LOGIQUE SELECTION IA ---
+    def handle_pick_ia_events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            click_pos = event.pos
+
+            if self.btn_pick_back.is_clicked(click_pos):
+                self.state = 'MENU'
+                return
+
+            for i, btn in enumerate(self.btn_ia_list):
+                if btn.is_clicked(click_pos):
+                    name = self.ia_names[i]
+                    if self.pick_ia1 is None:
+                        self.pick_ia1 = name
+                    elif self.pick_ia2 is None and name != self.pick_ia1:
+                        self.pick_ia2 = name
+                        # Les deux IA sont selectionnees, lancer le match
+                        self.start_game(vs_ia=False, ia_vs_ia=True,
+                                        ia1_name=self.pick_ia1, ia2_name=self.pick_ia2)
+                    break
+
+    def draw_pick_ia(self, mouse_pos):
+        self.screen.fill(COLOR_BG)
+
+        title = self.font_title.render("IA vs IA", True, COLOR_BOARD)
+        self.screen.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, 50)))
+
+        # Instructions
+        if self.pick_ia1 is None:
+            instr = "Choisissez la 1ere IA (Joueur Rouge)"
+            instr_color = COLOR_P1
+        else:
+            instr = f"{self.pick_ia1} selectionnee — Choisissez la 2eme IA (Joueur Bleu)"
+            instr_color = COLOR_P2
+
+        instr_surf = self.font_ui.render(instr, True, instr_color)
+        self.screen.blit(instr_surf, instr_surf.get_rect(center=(SCREEN_WIDTH // 2, 120)))
+
+        # Infos sous chaque bouton
+        for i, btn in enumerate(self.btn_ia_list):
+            name = self.ia_names[i]
+            selected = (name == self.pick_ia1)
+
+            btn.check_hover(mouse_pos)
+
+            # Surbrillance si selectionnee
+            if selected:
+                highlight = pygame.Rect(btn.rect.x - 3, btn.rect.y - 3,
+                                        btn.rect.width + 6, btn.rect.height + 6)
+                pygame.draw.rect(self.screen, COLOR_P1, highlight, 3, border_radius=12)
+
+            btn.draw(self.screen)
+
+        # Bouton retour
+        self.btn_pick_back.check_hover(mouse_pos)
+        self.btn_pick_back.draw(self.screen)
 
     # --- LOGIQUE JEU ---
     def handle_game_events(self, event):
@@ -298,11 +384,16 @@ class QuoridorGUI:
                 self.check_win_or_switch_turn()
 
     def check_win_or_switch_turn(self):
+        self.move_count += 1
         if self.board.winner is not None:
             self.state = 'VICTORY'
         else:
             self.turn = 1 if self.turn == 2 else 2
-            self.message = f"Tour du Joueur {self.turn}"
+            if self.ia_vs_ia:
+                name = self.ia1_name if self.turn == 1 else self.ia2_name
+                self.message = f"Tour de {name}"
+            else:
+                self.message = f"Tour du Joueur {self.turn}"
 
     def draw_game(self, mouse_pos):
         self.screen.fill(COLOR_BG)
@@ -332,29 +423,50 @@ class QuoridorGUI:
         panel_x = OFFSET_X + BOARD_SIZE + 20
         pygame.draw.rect(self.screen, COLOR_PANEL, (panel_x, OFFSET_Y, 280, BOARD_SIZE), border_radius=10)
 
-        # Info Tour
-        turn_text = f"TOUR : {'JOUEUR 1' if self.turn == 1 else 'JOUEUR 2'}"
-        turn_col = COLOR_P1 if self.turn == 1 else COLOR_P2
-        self.screen.blit(self.font_title.render(turn_text, True, turn_col), (panel_x + 20, OFFSET_Y + 30))
+        # Noms des joueurs
+        if self.ia_vs_ia:
+            name1 = self.ia1_name
+            name2 = self.ia2_name
+        else:
+            name1 = "Joueur 1"
+            name2 = "IA" if self.vs_ia else "Joueur 2"
 
-        # Info Murs
-        self.screen.blit(self.font_ui.render(f"Murs J1 : {self.board.walls_count[1]}", True, COLOR_P1),
+        # Info Tour
+        turn_name = name1 if self.turn == 1 else name2
+        turn_col = COLOR_P1 if self.turn == 1 else COLOR_P2
+        self.screen.blit(self.font_ui.render(f"TOUR :", True, COLOR_TEXT), (panel_x + 20, OFFSET_Y + 20))
+        self.screen.blit(self.font_ui.render(turn_name, True, turn_col), (panel_x + 20, OFFSET_Y + 50))
+
+        # Info Joueurs + Murs
+        self.screen.blit(self.font_small.render(f"{name1}", True, COLOR_P1),
                          (panel_x + 20, OFFSET_Y + 100))
-        self.screen.blit(self.font_ui.render(f"Murs J2 : {self.board.walls_count[2]}", True, COLOR_P2),
-                         (panel_x + 20, OFFSET_Y + 140))
+        self.screen.blit(self.font_small.render(f"  Murs : {self.board.walls_count[1]}", True, (200, 200, 200)),
+                         (panel_x + 20, OFFSET_Y + 122))
+
+        self.screen.blit(self.font_small.render(f"{name2}", True, COLOR_P2),
+                         (panel_x + 20, OFFSET_Y + 155))
+        self.screen.blit(self.font_small.render(f"  Murs : {self.board.walls_count[2]}", True, (200, 200, 200)),
+                         (panel_x + 20, OFFSET_Y + 177))
+
+        # Compteur de coups
+        self.screen.blit(self.font_small.render(f"Coup : {self.move_count}", True, (180, 180, 180)),
+                         (panel_x + 20, OFFSET_Y + 215))
 
         # Info Message
         msg_surf = self.font_small.render(self.message, True, (255, 200, 100))
-        self.screen.blit(msg_surf, (panel_x + 20, OFFSET_Y + 200))
+        self.screen.blit(msg_surf, (panel_x + 20, OFFSET_Y + 250))
 
         # Aide
         help_y = OFFSET_Y + 350
-        help_texts = [
-            "COMMANDES :",
-            "Clic Gauche : Bouger",
-            "Clic Droit : Mur",
-            "ESPACE : Tourner Mur"
-        ]
+        if self.ia_vs_ia:
+            help_texts = ["MODE SPECTATEUR", "Regardez le match !"]
+        else:
+            help_texts = [
+                "COMMANDES :",
+                "Clic Gauche : Bouger",
+                "Clic Droit : Mur",
+                "ESPACE : Tourner Mur",
+            ]
         for line in help_texts:
             self.screen.blit(self.font_small.render(line, True, (150, 150, 150)), (panel_x + 20, help_y))
             help_y += 30
@@ -386,16 +498,26 @@ class QuoridorGUI:
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
 
-        winner_text = f"VICTOIRE DU JOUEUR {self.board.winner} !"
+        # Nom du gagnant
+        if self.ia_vs_ia:
+            winner_name = self.ia1_name if self.board.winner == 1 else self.ia2_name
+            winner_text = f"{winner_name} GAGNE !"
+        else:
+            winner_text = f"VICTOIRE DU JOUEUR {self.board.winner} !"
         col = COLOR_P1 if self.board.winner == 1 else COLOR_P2
 
         txt_surf = self.font_title.render(winner_text, True, col)
-        txt_rect = txt_surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+        txt_rect = txt_surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 70))
 
         # Effet d'ombre texte
         shadow = self.font_title.render(winner_text, True, (0, 0, 0))
         self.screen.blit(shadow, (txt_rect.x + 4, txt_rect.y + 4))
         self.screen.blit(txt_surf, txt_rect)
+
+        # Stats du match
+        stats_text = f"{self.move_count} coups"
+        stats_surf = self.font_ui.render(stats_text, True, (200, 200, 200))
+        self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 10)))
 
         self.btn_restart.check_hover(mouse_pos)
         self.btn_restart.draw(self.screen)
