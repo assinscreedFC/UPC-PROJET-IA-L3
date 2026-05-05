@@ -95,12 +95,12 @@ class QuoridorGUI:
         self.ia_names = list(PARTICIPANTS.keys())
 
         # Création des boutons du menu
-        cx = SCREEN_WIDTH // 2 - 100
-        self.btn_pvp = Button(cx, 200, 200, 50, "Joueur vs Joueur", self.font_ui)
-        self.btn_pve_easy = Button(cx, 260, 200, 50, "IA Facile (Niv 1)", self.font_ui)
-        self.btn_pve_med = Button(cx, 320, 200, 50, "IA Moyenne (Niv 2)", self.font_ui)
-        self.btn_pve_hard = Button(cx, 380, 200, 50, "IA Experte (Niv 3)", self.font_ui)
-        self.btn_watch = Button(cx, 460, 200, 50, "Regarder IA vs IA", self.font_ui)
+        cx = SCREEN_WIDTH // 2 - 140
+        self.btn_pvp = Button(cx, 200, 280, 50, "Joueur vs Joueur", self.font_ui)
+        self.btn_pve_easy = Button(cx, 260, 280, 50, "IA Facile (Niv 1)", self.font_ui)
+        self.btn_pve_med = Button(cx, 320, 280, 50, "IA Moyenne (Niv 2)", self.font_ui)
+        self.btn_pve_hard = Button(cx, 380, 280, 50, "IA Experte (Niv 3)", self.font_ui)
+        self.btn_watch = Button(cx, 460, 280, 50, "Regarder IA vs IA", self.font_ui)
 
         # Boutons de selection IA (ecran PICK_IA)
         self.btn_ia_list = []
@@ -115,8 +115,11 @@ class QuoridorGUI:
 
         self.btn_pick_back = Button(cx, 520, 200, 40, "Retour", self.font_small)
 
+        # Bouton quitter la partie (affiché en jeu)
+        self.btn_quit_game = Button(SCREEN_WIDTH - 150, 10, 130, 35, "Quitter", self.font_small)
+
         # Bouton fin de jeu
-        self.btn_restart = Button(cx, 400, 200, 60, "Retour au Menu", self.font_ui)
+        self.btn_restart = Button(cx, 400, 280, 60, "Retour au Menu", self.font_ui)
 
     def load_music(self, filename):
         """Charge la musique si le fichier existe."""
@@ -164,6 +167,7 @@ class QuoridorGUI:
             self.message = "A vous de jouer !"
 
         self.state = 'GAME'
+        pygame.event.clear()
 
     def run(self):
         """Boucle principale."""
@@ -177,9 +181,14 @@ class QuoridorGUI:
                     pygame.quit()
                     sys.exit()
 
-                # Si l'état a changé pendant cette frame, ignorer les événements restants
+                # Debug: afficher tous les événements souris
+                if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                    print(f"[EVENT] type={'DOWN' if event.type == pygame.MOUSEBUTTONDOWN else 'UP'}, button={event.button}, pos={event.pos}, state={self.state}")
+
+                # Si l'état a changé pendant cette frame, vider la file et arrêter
                 if self.state != prev_state:
-                    continue
+                    pygame.event.clear()
+                    break
 
                 if self.state == 'MENU':
                     self.handle_menu_events(event, mouse_pos)
@@ -188,7 +197,7 @@ class QuoridorGUI:
                 elif self.state == 'GAME':
                     self.handle_game_events(event)
                 elif self.state == 'VICTORY':
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if event.type == pygame.MOUSEBUTTONDOWN :
                         if self.btn_restart.is_clicked(event.pos):
                             self.state = 'MENU'
 
@@ -208,7 +217,7 @@ class QuoridorGUI:
 
     # --- LOGIQUE MENU ---
     def handle_menu_events(self, event, mouse_pos):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN :
             click_pos = event.pos
             if self.btn_pvp.is_clicked(click_pos):
                 self.start_game(vs_ia=False)
@@ -242,7 +251,7 @@ class QuoridorGUI:
 
     # --- LOGIQUE SELECTION IA ---
     def handle_pick_ia_events(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN :
             click_pos = event.pos
 
             if self.btn_pick_back.is_clicked(click_pos):
@@ -312,6 +321,12 @@ class QuoridorGUI:
             else:
                 self.hover_pos = None
 
+        # Bouton quitter la partie
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.btn_quit_game.is_clicked(event.pos):
+                self.state = 'MENU'
+                return
+
         # Interaction Joueur Humain (Seulement si c'est son tour)
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.ia_vs_ia:
@@ -329,12 +344,15 @@ class QuoridorGUI:
 
                 # Clic Gauche : Déplacement
                 if event.button == 1:
-                    if self.board.move_pawn(self.turn, (gx, gy)):
+                    result = self.board.move_pawn(self.turn, (gx, gy))
+                    if result:
                         success = True
 
                 # Clic Droit : Mur
                 elif event.button == 3:
-                    if self.board.place_wall(self.turn, gx, gy, self.wall_orientation):
+                    result = self.board.place_wall(self.turn, gx, gy, self.wall_orientation)
+
+                    if result:
                         success = True
                     else:
                         self.message = "Placement impossible !"
@@ -470,6 +488,10 @@ class QuoridorGUI:
         for line in help_texts:
             self.screen.blit(self.font_small.render(line, True, (150, 150, 150)), (panel_x + 20, help_y))
             help_y += 30
+
+        # Bouton Quitter
+        self.btn_quit_game.check_hover(mouse_pos)
+        self.btn_quit_game.draw(self.screen)
 
     def draw_wall_rect(self, x, y, orientation, color):
         thickness = 12
