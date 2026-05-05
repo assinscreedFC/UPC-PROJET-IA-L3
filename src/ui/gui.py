@@ -2,7 +2,7 @@ import pygame
 import sys
 import os
 from src.engine.board import QuoridorBoard
-from src.ia.minimax import QuoridorIA
+from src.ia.minimax2 import QuoridorIA
 from src.tournois import PARTICIPANTS
 
 # --- CONSTANTES GRAPHIQUES ---
@@ -183,7 +183,8 @@ class QuoridorGUI:
 
                 # Debug: afficher tous les événements souris
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
-                    print(f"[EVENT] type={'DOWN' if event.type == pygame.MOUSEBUTTONDOWN else 'UP'}, button={event.button}, pos={event.pos}, state={self.state}")
+                    print("")
+                    #print(f"[EVENT] type={'DOWN' if event.type == pygame.MOUSEBUTTONDOWN else 'UP'}, button={event.button}, pos={event.pos}, state={self.state}")
 
                 # Si l'état a changé pendant cette frame, vider la file et arrêter
                 if self.state != prev_state:

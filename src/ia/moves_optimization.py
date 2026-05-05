@@ -28,16 +28,21 @@ def get_optimized_moves(board: QuoridorBoard, player_id: int) -> List[MoveType]:
     Génère une liste priorisée et réduite de coups pour l'IA.
 
     Filtre les murs qui bloqueraient le joueur lui-même plus que l'adversaire.
+    Les coups sont triés pour optimiser l'élagage alpha-beta :
+    - Pawn moves triés par progression vers l'objectif (meilleurs en premier)
+    - Wall moves triés par gain net décroissant (meilleurs en premier)
     """
     moves: List[MoveType] = []
     opp_id = 3 - player_id
+    target_y = 8 if player_id == 1 else 0
 
-    # 1. Ajouter TOUS les déplacements de pions (Priorité absolue)
+    # B3 — Pawn moves triés par progression vers l'objectif
     pawn_moves = board.get_legal_pawn_moves(player_id)
+    pawn_moves.sort(key=lambda pos: abs(pos[1] - target_y))
     for pos in pawn_moves:
         moves.append(("MOVE", pos))
 
-    # 2. Ajouter les murs INTELLIGENTS (filtrés)
+    # B2 — Wall moves filtrés et triés par gain net décroissant
     if board.walls_count[player_id] > 0:
         p1_x, p1_y = board.positions[1]
         p2_x, p2_y = board.positions[2]
@@ -51,6 +56,8 @@ def get_optimized_moves(board: QuoridorBoard, player_id: int) -> List[MoveType]:
         # Distances actuelles avant pose de mur
         dist_self_before = _bfs_distance(board, player_id)
         dist_opp_before = _bfs_distance(board, opp_id)
+
+        wall_candidates = []
 
         for x in range(min_x, max_x):
             for y in range(min_y, max_y):
@@ -75,11 +82,12 @@ def get_optimized_moves(board: QuoridorBoard, player_id: int) -> List[MoveType]:
                     gain_opp = dist_opp_after - dist_opp_before  # positif = bon pour nous
                     cost_self = dist_self_after - dist_self_before  # positif = mauvais pour nous
 
-                    # Garder le mur si :
-                    # - il ralentit l'adversaire plus que nous (offensif)
-                    # - OU il ralentit l'adversaire sans nous affecter (neutre-offensif)
-                    # Rejeter seulement les murs clairement mauvais (nous coûtent plus)
                     if gain_opp >= cost_self and gain_opp > 0:
-                        moves.append(("WALL", (x, y, orientation)))
+                        gain_net = gain_opp - cost_self
+                        wall_candidates.append((gain_net, ("WALL", (x, y, orientation))))
+
+        # Trier par gain net décroissant pour l'élagage alpha-beta
+        wall_candidates.sort(key=lambda x: x[0], reverse=True)
+        moves.extend(move for _, move in wall_candidates)
 
     return moves

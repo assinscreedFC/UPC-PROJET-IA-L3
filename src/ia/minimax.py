@@ -1,8 +1,22 @@
 import math
+import random
 from typing import Tuple, Optional, List,Union
 from src.engine.board import QuoridorBoard
 from src.ia.evaluations import evaluate_board
 from src.ia.moves_optimization import get_optimized_moves
+
+
+def _fast_copy(board: QuoridorBoard) -> QuoridorBoard:
+    """Copie légère du plateau — ~50x plus rapide que copy.deepcopy.
+    Sûr car tous les éléments (tuples, ints, strings) sont immutables."""
+    new = QuoridorBoard.__new__(QuoridorBoard)
+    new.size = 9
+    new.positions = dict(board.positions)
+    new.walls = set(board.walls)
+    new.walls_count = dict(board.walls_count)
+    new.winner = board.winner
+    return new
+
 
 class QuoridorIA:
     """
@@ -38,7 +52,15 @@ class QuoridorIA:
         Returns:
             float: Score de l'évaluation.
         """
-        if depth == 0 or board.winner is not None:
+        # A3 — Traiter les victoires/défaites directement (évite BFS inutile,
+        # préfère les victoires rapides et les défaites lentes)
+        if board.winner is not None:
+            if board.winner == self.player_id:
+                return 1000000 + depth
+            else:
+                return -1000000 - depth
+
+        if depth == 0:
             return evaluate_board(board, self.player_id, self.strategy)
 
         current_player = self.player_id if maximizing_player else (3 - self.player_id)
@@ -46,12 +68,14 @@ class QuoridorIA:
 
         if maximizing_player:
             value = -math.inf
-            for type, data in moves:
-                new_board = board.copy()
-                if type == "MOVE":
+            for move_type, data in moves:
+                new_board = _fast_copy(board)
+                if move_type == "MOVE":
                     new_board.move_pawn(current_player, data)
                 else:
-                    new_board.place_wall(current_player, *data)
+                    # A4 — Application directe des murs pré-validés
+                    new_board.walls.add(data)
+                    new_board.walls_count[current_player] -= 1
 
                 value = max(value, self.alpha_beta(new_board, depth - 1, alpha, beta, False))
                 alpha = max(alpha, value)
@@ -59,12 +83,14 @@ class QuoridorIA:
             return value
         else:
             value = math.inf
-            for type, data in moves:
-                new_board = board.copy()
-                if type == "MOVE":
+            for move_type, data in moves:
+                new_board = _fast_copy(board)
+                if move_type == "MOVE":
                     new_board.move_pawn(current_player, data)
                 else:
-                    new_board.place_wall(current_player, *data)
+                    # A4 — Application directe des murs pré-validés
+                    new_board.walls.add(data)
+                    new_board.walls_count[current_player] -= 1
 
                 value = min(value, self.alpha_beta(new_board, depth - 1, alpha, beta, True))
                 beta = min(beta, value)
@@ -97,25 +123,28 @@ class QuoridorIA:
         # On itère sur les coups de premier niveau pour trouver lequel donne le meilleur score
         for move_type, data in moves:
             # Simulation du coup
-            new_board = board.copy()
+            new_board = _fast_copy(board)
             if move_type == "MOVE":
                 new_board.move_pawn(self.player_id, data)
             else:
-                new_board.place_wall(self.player_id, *data)
+                # A4 — Application directe des murs pré-validés
+                new_board.walls.add(data)
+                new_board.walls_count[self.player_id] -= 1
 
             # Appel récursif (c'est maintenant au tour de MIN de jouer, d'où False)
-            value = self.alpha_beta(new_board, self.depth - 1, alpha, beta, False)
+            raw_value = self.alpha_beta(new_board, self.depth - 1, alpha, beta, False)
 
-            # Pénaliser les positions déjà visitées récemment pour casser l'oscillation
+            # A1 — Séparer valeur brute (pour alpha) et valeur ajustée (pour best_value)
+            adjusted_value = raw_value
             if move_type == "MOVE" and data in recent:
-                value -= 3
+                adjusted_value -= 50
 
-            if value > best_value:
-                best_value = value
+            if adjusted_value > best_value or (adjusted_value == best_value and random.random() < 0.5):
+                best_value = adjusted_value
                 best_move = (move_type, data)
 
-            # Mise à jour de l'alpha pour l'élagage
-            alpha = max(alpha, value)
+            # A1 — Alpha basé sur le score brut, pas le score pénalisé
+            alpha = max(alpha, raw_value)
 
         # Enregistrer la position choisie dans l'historique
         if best_move and best_move[0] == "MOVE":

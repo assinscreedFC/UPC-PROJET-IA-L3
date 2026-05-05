@@ -1,10 +1,11 @@
 import time
 import csv
 import os
+import random
 from typing import Dict, List, Tuple
 from itertools import combinations
 from src.engine.board import QuoridorBoard
-from src.ia.minimax import QuoridorIA
+from src.ia.minimax2 import QuoridorIA
 
 
 # ============================================================
@@ -120,10 +121,10 @@ def play_group_stage(group_name: str, members: List[str], n_rounds: int = 3) -> 
     pairs = list(combinations(members, 2))
     for round_num in range(1, n_rounds + 1):
         print(f"\n  --- Journee {round_num} ---")
-        for name1, name2 in pairs:
+        for pair_idx, (name1, name2) in enumerate(pairs):
             match_num += 1
-            # Alterner qui est J1/J2 a chaque round
-            if round_num % 2 == 0:
+            # Alterner J1/J2 par paire : les rounds pairs pour cette paire inversent
+            if (round_num + pair_idx) % 2 == 1:
                 name1, name2 = name2, name1
             result = play_match(name1, name2, f"Poule {group_name} - J{round_num}", match_num)
             results.append(result)
@@ -141,6 +142,71 @@ def play_group_stage(group_name: str, members: List[str], n_rounds: int = 3) -> 
         print(f"    {i}. {name:15s} - {wins[name]} victoires")
 
     return results, ranking
+
+
+# ============================================================
+# MATCH ALLER-RETOUR (ELIMINATOIRE)
+# ============================================================
+
+def play_match_home_away(name1: str, name2: str, phase: str, match_num: int) -> Tuple[List[Dict], str]:
+    """
+    Joue un match aller-retour entre deux IA.
+    name1 est J1 a l'aller, name2 est J1 au retour.
+    En cas d'egalite 1-1 : departage sur coups (le plus court gagne),
+    puis sur murs restants, puis 3e match avec ordre tire au hasard.
+    Retourne la liste des resultats et le nom du vainqueur.
+    """
+    # Aller : name1 = J1, name2 = J2
+    result1 = play_match(name1, name2, phase, match_num)
+    # Retour : name2 = J1, name1 = J2
+    result2 = play_match(name2, name1, phase, match_num)
+
+    results = [result1, result2]
+
+    wins1 = sum(1 for r in results if r["winner"] == name1)
+    wins2 = sum(1 for r in results if r["winner"] == name2)
+
+    if wins1 != wins2:
+        winner = name1 if wins1 > wins2 else name2
+        return results, winner
+
+    # Egalite 1-1 : departager sur le nombre de coups du match gagne
+    # Le gagnant du match le plus court avance
+    won_by_1 = [r for r in results if r["winner"] == name1]
+    won_by_2 = [r for r in results if r["winner"] == name2]
+
+    if won_by_1 and won_by_2:
+        moves1 = min(r["moves"] for r in won_by_1)
+        moves2 = min(r["moves"] for r in won_by_2)
+        if moves1 != moves2:
+            winner = name1 if moves1 < moves2 else name2
+            return results, winner
+
+        # Egalite sur les coups : departager sur les murs restants (plus = mieux)
+        # Murs restants = 10 - murs utilises par le gagnant dans son match gagne
+        best_r1 = min(won_by_1, key=lambda r: r["moves"])
+        best_r2 = min(won_by_2, key=lambda r: r["moves"])
+        # Determiner les murs restants du gagnant dans chaque match
+        walls_left_1 = 10 - (best_r1["p1_walls_used"] if best_r1["ia1"] == name1 else best_r1["p2_walls_used"])
+        walls_left_2 = 10 - (best_r2["p1_walls_used"] if best_r2["ia1"] == name2 else best_r2["p2_walls_used"])
+        if walls_left_1 != walls_left_2:
+            winner = name1 if walls_left_1 > walls_left_2 else name2
+            return results, winner
+
+    # Egalite parfaite : 3e match avec ordre tire au hasard
+    if random.random() < 0.5:
+        result3 = play_match(name1, name2, phase + " (tiebreak)", match_num)
+    else:
+        result3 = play_match(name2, name1, phase + " (tiebreak)", match_num)
+    results.append(result3)
+
+    if result3["winner"] == name1:
+        return results, name1
+    elif result3["winner"] == name2:
+        return results, name2
+    else:
+        # Nul au 3e match : name1 (mieux classe) avance en dernier recours
+        return results, name1
 
 
 # ============================================================
@@ -173,16 +239,11 @@ def play_knockout(rankings_a: List[str], rankings_b: List[str]) -> Tuple[List[Di
 
     for name1, name2 in quarter_matchups:
         match_count += 1
-        result = play_match(name1, name2, "Quart de finale", match_count)
-        results.append(result)
-
-        if result["winner"] == name1 or result["winner"] == "Nul":
-            # En cas de nul, J1 (mieux classe) avance
-            quarter_winners.append(name1)
-            quarter_losers.append(name2)
-        else:
-            quarter_winners.append(name2)
-            quarter_losers.append(name1)
+        match_results, winner = play_match_home_away(name1, name2, "Quart de finale", match_count)
+        results.extend(match_results)
+        loser = name2 if winner == name1 else name1
+        quarter_winners.append(winner)
+        quarter_losers.append(loser)
 
     # --- DEMI-FINALES ---
     print(f"\n{'='*60}")
@@ -199,15 +260,11 @@ def play_knockout(rankings_a: List[str], rankings_b: List[str]) -> Tuple[List[Di
 
     for name1, name2 in semi_matchups:
         match_count += 1
-        result = play_match(name1, name2, "Demi-finale", match_count)
-        results.append(result)
-
-        if result["winner"] == name1 or result["winner"] == "Nul":
-            semi_winners.append(name1)
-            semi_losers.append(name2)
-        else:
-            semi_winners.append(name2)
-            semi_losers.append(name1)
+        match_results, winner = play_match_home_away(name1, name2, "Demi-finale", match_count)
+        results.extend(match_results)
+        loser = name2 if winner == name1 else name1
+        semi_winners.append(winner)
+        semi_losers.append(loser)
 
     # --- PETITE FINALE (3eme place) ---
     print(f"\n{'='*60}")
@@ -215,13 +272,9 @@ def play_knockout(rankings_a: List[str], rankings_b: List[str]) -> Tuple[List[Di
     print(f"{'='*60}")
 
     match_count += 1
-    result_pf = play_match(semi_losers[0], semi_losers[1], "Petite finale", match_count)
-    results.append(result_pf)
-
-    if result_pf["winner"] == semi_losers[0] or result_pf["winner"] == "Nul":
-        third, fourth = semi_losers[0], semi_losers[1]
-    else:
-        third, fourth = semi_losers[1], semi_losers[0]
+    pf_results, third = play_match_home_away(semi_losers[0], semi_losers[1], "Petite finale", match_count)
+    results.extend(pf_results)
+    fourth = semi_losers[1] if third == semi_losers[0] else semi_losers[0]
 
     # --- GRANDE FINALE ---
     print(f"\n{'='*60}")
@@ -229,13 +282,9 @@ def play_knockout(rankings_a: List[str], rankings_b: List[str]) -> Tuple[List[Di
     print(f"{'='*60}")
 
     match_count += 1
-    result_gf = play_match(semi_winners[0], semi_winners[1], "Finale", match_count)
-    results.append(result_gf)
-
-    if result_gf["winner"] == semi_winners[0] or result_gf["winner"] == "Nul":
-        champion, second = semi_winners[0], semi_winners[1]
-    else:
-        champion, second = semi_winners[1], semi_winners[0]
+    gf_results, champion = play_match_home_away(semi_winners[0], semi_winners[1], "Finale", match_count)
+    results.extend(gf_results)
+    second = semi_winners[1] if champion == semi_winners[0] else semi_winners[0]
 
     # Classement 5-8 : les perdants des quarts, classes par leur position en poule
     ranking_5_8 = sorted(quarter_losers,
