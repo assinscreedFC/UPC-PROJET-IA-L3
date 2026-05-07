@@ -602,6 +602,8 @@ def analyze_results(all_results: List[Dict], final_ranking: List[str]):
 def run_tournament():
     """Lance le tournoi Minimax pur complet : 3 poules + phase éliminatoire."""
 
+    tournament_start = time.time()
+
     print("\n" + "#" * 60)
     print("#" + " " * 10 + "TOURNOI MINIMAX PUR (SANS ÉLAGAGE)" + " " * 7 + "#")
     print("#" + " " * 10 + f"12 participants — D1 à D4" + " " * 16 + "#")
@@ -669,6 +671,12 @@ def run_tournament():
 
     # --- ANALYSE ET GRAPHIQUES ---
     analyze_results(all_results, final_ranking)
+
+    # --- DURÉE TOTALE ---
+    total_time = time.time() - tournament_start
+    minutes = int(total_time // 60)
+    seconds = int(total_time % 60)
+    print(f"\n  Durée totale du tournoi : {minutes}min {seconds}s")
 
     return all_results
 
