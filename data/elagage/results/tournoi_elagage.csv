@@ -1,0 +1,71 @@
+phase,match,ia1,ia1_depth,ia1_strategy,ia2,ia2_depth,ia2_strategy,winner,moves,time,p1_walls_used,p2_walls_used
+Poule A - J1,1,D2-Expert,2,expert,D1-Simple,1,simple,D2-Expert,15,1.1505,1,0
+Poule A - J1,2,D1-Simple,1,simple,D3-Advanced,3,advanced,D3-Advanced,14,2.2986,0,0
+Poule A - J1,3,D4-Simple,4,simple,D1-Simple,1,simple,D4-Simple,17,18.2081,2,0
+Poule A - J1,4,D2-Expert,2,expert,D3-Advanced,3,advanced,D2-Expert,79,6.6037,10,10
+Poule A - J1,5,D4-Simple,4,simple,D2-Expert,2,expert,D4-Simple,67,23.7198,10,9
+Poule A - J1,6,D3-Advanced,3,advanced,D4-Simple,4,simple,D3-Advanced,75,40.824,10,10
+Poule A - J2,7,D1-Simple,1,simple,D2-Expert,2,expert,D2-Expert,14,0.9029,0,0
+Poule A - J2,8,D3-Advanced,3,advanced,D1-Simple,1,simple,D3-Advanced,17,3.2588,2,0
+Poule A - J2,9,D1-Simple,1,simple,D4-Simple,4,simple,D4-Simple,14,12.1133,0,0
+Poule A - J2,10,D3-Advanced,3,advanced,D2-Expert,2,expert,Nul,200,7.8115,9,6
+Poule A - J2,11,D2-Expert,2,expert,D4-Simple,4,simple,D4-Simple,80,49.7811,10,10
+Poule A - J2,12,D4-Simple,4,simple,D3-Advanced,3,advanced,D3-Advanced,78,37.9849,10,10
+Poule A - J3,13,D2-Expert,2,expert,D1-Simple,1,simple,D2-Expert,15,1.2163,1,0
+Poule A - J3,14,D1-Simple,1,simple,D3-Advanced,3,advanced,D3-Advanced,14,2.3733,0,0
+Poule A - J3,15,D4-Simple,4,simple,D1-Simple,1,simple,D4-Simple,17,18.7686,2,0
+Poule A - J3,16,D2-Expert,2,expert,D3-Advanced,3,advanced,D2-Expert,79,6.5455,10,10
+Poule A - J3,17,D4-Simple,4,simple,D2-Expert,2,expert,D4-Simple,67,24.6682,10,9
+Poule A - J3,18,D3-Advanced,3,advanced,D4-Simple,4,simple,D3-Advanced,75,43.68,10,10
+Poule B - J1,1,D2-Simple,2,simple,D1-Advanced,1,advanced,D2-Simple,15,1.2451,1,0
+Poule B - J1,2,D1-Advanced,1,advanced,D3-Expert,3,expert,D3-Expert,14,2.4424,0,0
+Poule B - J1,3,D4-Advanced,4,advanced,D1-Advanced,1,advanced,D4-Advanced,17,20.6499,2,0
+Poule B - J1,4,D2-Simple,2,simple,D3-Expert,3,expert,D2-Simple,91,6.1868,10,10
+Poule B - J1,5,D4-Advanced,4,advanced,D2-Simple,2,simple,D4-Advanced,71,33.1408,8,10
+Poule B - J1,6,D3-Expert,3,expert,D4-Advanced,4,advanced,D3-Expert,91,29.9581,10,10
+Poule B - J2,7,D1-Advanced,1,advanced,D2-Simple,2,simple,D2-Simple,14,0.9812,0,0
+Poule B - J2,8,D3-Expert,3,expert,D1-Advanced,1,advanced,D3-Expert,17,3.7753,2,0
+Poule B - J2,9,D1-Advanced,1,advanced,D4-Advanced,4,advanced,D4-Advanced,14,12.9876,0,0
+Poule B - J2,10,D3-Expert,3,expert,D2-Simple,2,simple,D3-Expert,71,8.2356,8,10
+Poule B - J2,11,D2-Simple,2,simple,D4-Advanced,4,advanced,D4-Advanced,62,23.4205,10,7
+Poule B - J2,12,D4-Advanced,4,advanced,D3-Expert,3,expert,D4-Advanced,79,33.1613,10,10
+Poule B - J3,13,D2-Simple,2,simple,D1-Advanced,1,advanced,D2-Simple,15,1.4066,1,0
+Poule B - J3,14,D1-Advanced,1,advanced,D3-Expert,3,expert,D3-Expert,14,2.7105,0,0
+Poule B - J3,15,D4-Advanced,4,advanced,D1-Advanced,1,advanced,D4-Advanced,17,19.313,2,0
+Poule B - J3,16,D2-Simple,2,simple,D3-Expert,3,expert,D2-Simple,91,6.162,10,10
+Poule B - J3,17,D4-Advanced,4,advanced,D2-Simple,2,simple,D4-Advanced,71,33.9033,8,10
+Poule B - J3,18,D3-Expert,3,expert,D4-Advanced,4,advanced,D3-Expert,91,30.9205,10,10
+Poule C - J1,1,D2-Advanced,2,advanced,D1-Expert,1,expert,D2-Advanced,15,1.221,1,0
+Poule C - J1,2,D1-Expert,1,expert,D3-Simple,3,simple,D3-Simple,14,2.4268,0,0
+Poule C - J1,3,D4-Expert,4,expert,D1-Expert,1,expert,D4-Expert,59,39.4896,10,8
+Poule C - J1,4,D2-Advanced,2,advanced,D3-Simple,3,simple,D2-Advanced,85,6.4966,10,10
+Poule C - J1,5,D4-Expert,4,expert,D2-Advanced,2,advanced,D2-Advanced,72,29.6317,10,7
+Poule C - J1,6,D3-Simple,3,simple,D4-Expert,4,expert,D4-Expert,84,32.8641,10,10
+Poule C - J2,7,D1-Expert,1,expert,D2-Advanced,2,advanced,D2-Advanced,14,1.1283,0,0
+Poule C - J2,8,D3-Simple,3,simple,D1-Expert,1,expert,D3-Simple,17,3.9064,2,0
+Poule C - J2,9,D1-Expert,1,expert,D4-Expert,4,expert,D4-Expert,14,12.5171,0,0
+Poule C - J2,10,D3-Simple,3,simple,D2-Advanced,2,advanced,D3-Simple,91,7.4281,10,10
+Poule C - J2,11,D2-Advanced,2,advanced,D4-Expert,4,expert,D2-Advanced,75,24.5863,10,7
+Poule C - J2,12,D4-Expert,4,expert,D3-Simple,3,simple,D4-Expert,73,28.8882,10,10
+Poule C - J3,13,D2-Advanced,2,advanced,D1-Expert,1,expert,D2-Advanced,15,1.2291,1,0
+Poule C - J3,14,D1-Expert,1,expert,D3-Simple,3,simple,D3-Simple,14,2.5266,0,0
+Poule C - J3,15,D4-Expert,4,expert,D1-Expert,1,expert,D4-Expert,59,45.2542,10,8
+Poule C - J3,16,D2-Advanced,2,advanced,D3-Simple,3,simple,D2-Advanced,85,6.4125,10,10
+Poule C - J3,17,D4-Expert,4,expert,D2-Advanced,2,advanced,D2-Advanced,72,29.3817,10,7
+Poule C - J3,18,D3-Simple,3,simple,D4-Expert,4,expert,D4-Expert,84,34.1675,10,10
+Quart de finale,1,D3-Advanced,3,advanced,D2-Simple,2,simple,D3-Advanced,69,9.1643,9,10
+Quart de finale,1,D2-Simple,2,simple,D3-Advanced,3,advanced,D2-Simple,91,6.5104,10,10
+Quart de finale,2,D4-Advanced,4,advanced,D4-Expert,4,expert,D4-Advanced,95,46.6987,9,9
+Quart de finale,2,D4-Expert,4,expert,D4-Advanced,4,advanced,D4-Advanced,96,46.6402,10,10
+Quart de finale,3,D2-Advanced,2,advanced,D3-Expert,3,expert,D2-Advanced,79,6.7171,10,10
+Quart de finale,3,D3-Expert,3,expert,D2-Advanced,2,advanced,D3-Expert,91,7.8149,10,10
+Quart de finale,4,D4-Simple,4,simple,D2-Expert,2,expert,D4-Simple,67,25.9417,10,9
+Quart de finale,4,D2-Expert,2,expert,D4-Simple,4,simple,D4-Simple,80,50.8593,10,10
+Demi-finale,5,D3-Advanced,3,advanced,D2-Advanced,2,advanced,Nul,200,9.1555,9,6
+Demi-finale,5,D2-Advanced,2,advanced,D3-Advanced,3,advanced,D2-Advanced,79,7.2043,10,10
+Demi-finale,6,D4-Advanced,4,advanced,D4-Simple,4,simple,Nul,200,50.9326,7,8
+Demi-finale,6,D4-Simple,4,simple,D4-Advanced,4,advanced,D4-Advanced,70,48.5575,10,8
+Petite finale,7,D3-Advanced,3,advanced,D4-Simple,4,simple,D3-Advanced,75,48.6539,10,10
+Petite finale,7,D4-Simple,4,simple,D3-Advanced,3,advanced,D3-Advanced,78,42.4375,10,10
+Finale,8,D2-Advanced,2,advanced,D4-Advanced,4,advanced,D2-Advanced,75,25.9782,10,7
+Finale,8,D4-Advanced,4,advanced,D2-Advanced,2,advanced,D4-Advanced,61,29.8332,10,8
