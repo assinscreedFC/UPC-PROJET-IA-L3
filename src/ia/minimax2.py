@@ -3,7 +3,7 @@ Minimax pur (sans élagage alpha-beta) pour le jeu Quoridor.
 """
 
 import math
-import random
+
 from typing import Tuple, Union, Optional
 
 from src.engine.board import QuoridorBoard
@@ -102,7 +102,7 @@ class QuoridorIA:
             if move_type == "MOVE" and data in recent:
                 adjusted -= 50
 
-            if adjusted > best_value or (adjusted == best_value and random.random() < 0.2):
+            if adjusted > best_value:
                 best_value = adjusted
                 best_move = (move_type, data)
 

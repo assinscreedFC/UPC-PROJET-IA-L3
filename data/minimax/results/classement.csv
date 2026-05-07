@@ -1,0 +1,13 @@
+rang,nom,depth,strategy
+1,D4-Advanced,4,advanced
+2,D2-Expert,2,expert
+3,D2-Simple,2,simple
+4,D4-Simple,4,simple
+5,D3-Expert,3,expert
+6,D4-Expert,4,expert
+7,D2-Advanced,2,advanced
+8,D3-Advanced,3,advanced
+9,D3-Simple,3,simple
+10,D1-Simple,1,simple
+11,D1-Advanced,1,advanced
+12,D1-Expert,1,expert
